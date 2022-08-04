@@ -22,9 +22,6 @@
 #include <geometry_msgs/msg/pose_stamped.hpp>
 #include <shape_msgs/msg/mesh.hpp>
 
-#include <boost/algorithm/string.hpp>
-#include <fstream>
-
 #include "helper_tools.hpp"
 
 static const rclcpp::Logger LOGGER = rclcpp::get_logger("robot_cartesian_ompl");
@@ -117,7 +114,11 @@ int main(int argc, char** argv)
   //     move_group.setStartState(traj.getLastWayPoint());
   //   }
   // }
-  // traj_processor.computeTimeStamps(traj,0.2,0.01);
+  double velcocity_scaling, acceleration_scaling;
+  move_group_node->get_parameter("velcocity_scaling", velcocity_scaling);
+  move_group_node->get_parameter("acceleration_scaling", acceleration_scaling);
+
+  traj_processor.computeTimeStamps(traj, velcocity_scaling, acceleration_scaling);
   for(auto i=0ul; i<traj.getWayPointDurations().size();i++){
     // std::cout<< traj.getWayPointDurationFromPrevious(i) <<std::endl;
     if(traj.getWayPointDurationFromPrevious(i) == 0)

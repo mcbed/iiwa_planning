@@ -1,7 +1,9 @@
 /**:
   ros__parameters:
     waypoint_file_path: "/home/maciej/dev/dump/models/data.csv"
-    shift: [1.0, -0.7, 0.1]
+    shift: [1.0, -0.7, 0.2]
     scale: 1.0
+    velcocity_scaling: 0.2
+    acceleration_scaling: 1.0
     plot_waypoints: true
-    plot_frames: true
+    plot_frames: false
