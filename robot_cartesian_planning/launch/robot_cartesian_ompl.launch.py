@@ -44,6 +44,13 @@ def generate_launch_description():
         ]
     )
 
+    joint_limits_yaml = PathJoinSubstitution([
+            FindPackageShare('iiwa_description'),
+            'moveit2',
+            'iiwa_joint_limits.yaml',
+        ]
+    )
+
     robot_cartesian_config = PathJoinSubstitution([
             FindPackageShare('robot_cartesian_planning'),
             'config',
@@ -60,7 +67,8 @@ def generate_launch_description():
             robot_description,
             robot_description_semantic,
             kinematics_yaml,
-            robot_cartesian_config
+            joint_limits_yaml,
+            robot_cartesian_config,
         ],
     )
 
