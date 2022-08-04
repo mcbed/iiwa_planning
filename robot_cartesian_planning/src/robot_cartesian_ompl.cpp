@@ -25,19 +25,25 @@
 #include <boost/algorithm/string.hpp>
 #include <fstream>
 
-static const rclcpp::Logger LOGGER = rclcpp::get_logger("iiwa_mvif");
+#include "helper_tools.hpp"
+
+static const rclcpp::Logger LOGGER = rclcpp::get_logger("robot_cartesian_ompl");
 
 int main(int argc, char** argv)
 {
   rclcpp::init(argc, argv);
   rclcpp::NodeOptions node_options;
   node_options.automatically_declare_parameters_from_overrides(true);
-  auto move_group_node = rclcpp::Node::make_shared("iiwa_mvif", node_options);
+  auto move_group_node = rclcpp::Node::make_shared("robot_cartesian_ompl", node_options);
   rclcpp::executors::SingleThreadedExecutor executor;
   executor.add_node(move_group_node);
   std::thread([&executor]() { executor.spin(); }).detach();
 
-  static const std::string PLANNING_GROUP = "iiwa_arm";//"iiwa_arm";
+  namespace rvt = rviz_visual_tools;
+  rviz_visual_tools::RvizVisualTools rvisual_tools("world", "path", move_group_node);
+  rvisual_tools.deleteAllMarkers();
+
+  static const std::string PLANNING_GROUP = "iiwa_arm";
   moveit::planning_interface::MoveGroupInterface move_group(move_group_node, PLANNING_GROUP);
   moveit::planning_interface::PlanningSceneInterface planning_scene_interface;
   const moveit::core::JointModelGroup* joint_model_group =
@@ -49,8 +55,34 @@ int main(int argc, char** argv)
   std::copy(move_group.getJointModelGroupNames().begin(), move_group.getJointModelGroupNames().end(),
             std::ostream_iterator<std::string>(std::cout, ", "));
   
-  std::vector<geometry_msgs::msg::Pose> waypoints ;
+  std::string waypoint_file_path;
+  std::vector<double> shift;
+  double scale;
+  move_group_node->get_parameter("waypoint_file_path", waypoint_file_path);
+  move_group_node->get_parameter("shift", shift);
+  move_group_node->get_parameter("scale", scale);
+  RCLCPP_INFO(LOGGER, "Loading waypoints from path: %s", waypoint_file_path.c_str());
+  std::vector<geometry_msgs::msg::Pose> waypoints = csv2path(waypoint_file_path, shift, scale);
+
   RCLCPP_INFO(LOGGER, "loaded %li waypoints",waypoints.size());
+
+  bool plot_waypoints;
+  bool plot_frames;
+  move_group_node->get_parameter("plot_waypoints", plot_waypoints);
+  move_group_node->get_parameter("plot_frames", plot_frames);
+
+  // // Visualize the plan in RViz
+  rvisual_tools.deleteAllMarkers();
+  rvisual_tools.setBaseFrame("world");
+  if(plot_waypoints){
+    rvisual_tools.publishPath(waypoints, rvt::LIME_GREEN, rvt::XXXXSMALL);
+  }
+  if(plot_frames){
+    for (std::size_t i = 0; i < waypoints.size(); ++i)
+      rvisual_tools.publishAxisLabeled(waypoints[i], "", rvt::XXXXSMALL);
+  }
+  rvisual_tools.trigger();
+
 
   moveit::planning_interface::MoveGroupInterface::Plan plan;
 
@@ -86,7 +118,7 @@ int main(int argc, char** argv)
   //   }
   // }
   // traj_processor.computeTimeStamps(traj,0.2,0.01);
-  for(auto i=0ul; i<traj.getWayPointDurations ().size();i++){
+  for(auto i=0ul; i<traj.getWayPointDurations().size();i++){
     // std::cout<< traj.getWayPointDurationFromPrevious(i) <<std::endl;
     if(traj.getWayPointDurationFromPrevious(i) == 0)
       traj.setWayPointDurationFromPrevious(i,0.0001);
