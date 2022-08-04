@@ -51,7 +51,14 @@ add_executable(
   src/helper_tools.hpp
 )
 
+add_executable(
+  robot_cartesian_pilz 
+  src/robot_cartesian_pilz.cpp
+  src/helper_tools.hpp
+)
+
 ament_target_dependencies( robot_cartesian_ompl ${THIS_PACKAGE_INCLUDE_DEPENDS} Boost)
+ament_target_dependencies( robot_cartesian_pilz ${THIS_PACKAGE_INCLUDE_DEPENDS} Boost)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
@@ -59,12 +66,12 @@ if(BUILD_TESTING)
 endif()
 
 install(TARGETS 
-robot_cartesian_ompl
+  robot_cartesian_ompl
+  robot_cartesian_pilz
   DESTINATION lib/${PROJECT_NAME}
 )
 install(DIRECTORY launch config
   DESTINATION share/${PROJECT_NAME}
 )
-
 
 ament_package()
