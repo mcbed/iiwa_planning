@@ -40,14 +40,19 @@ int main(int argc, char** argv)
 
     moveit::planning_interface::MoveGroupInterface move_group(node, PLANNING_GROUP);  
 
-    std::string waypoint_file_path;
+      std::string waypoint_file_path, waypoint_file_type;
     std::vector<double> shift;
     double scale;
+    std::vector<geometry_msgs::msg::Pose> waypoints;
     node->get_parameter("waypoint_file_path", waypoint_file_path);
+    node->get_parameter("waypoint_file_type", waypoint_file_type);
     node->get_parameter("shift", shift);
     node->get_parameter("scale", scale);
     RCLCPP_INFO(LOGGER, "Loading waypoints from path: %s", waypoint_file_path.c_str());
-    std::vector<geometry_msgs::msg::Pose> waypoints = csv2path(waypoint_file_path, shift, scale);
+    if(waypoint_file_type == "csv")
+        waypoints = csv2path(waypoint_file_path, shift, scale);
+    else if(waypoint_file_type == "apt")
+        waypoints = apt2path(waypoint_file_path, shift, scale);
 
     RCLCPP_INFO(LOGGER, "loaded %li waypoints",waypoints.size());
 

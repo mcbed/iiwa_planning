@@ -52,14 +52,19 @@ int main(int argc, char** argv)
   std::copy(move_group.getJointModelGroupNames().begin(), move_group.getJointModelGroupNames().end(),
             std::ostream_iterator<std::string>(std::cout, ", "));
   
-  std::string waypoint_file_path;
+  std::string waypoint_file_path, waypoint_file_type;
   std::vector<double> shift;
   double scale;
+  std::vector<geometry_msgs::msg::Pose> waypoints;
   move_group_node->get_parameter("waypoint_file_path", waypoint_file_path);
+  move_group_node->get_parameter("waypoint_file_type", waypoint_file_type);
   move_group_node->get_parameter("shift", shift);
   move_group_node->get_parameter("scale", scale);
   RCLCPP_INFO(LOGGER, "Loading waypoints from path: %s", waypoint_file_path.c_str());
-  std::vector<geometry_msgs::msg::Pose> waypoints = csv2path(waypoint_file_path, shift, scale);
+  if(waypoint_file_type == "csv")
+    waypoints = csv2path(waypoint_file_path, shift, scale);
+  else if(waypoint_file_type == "apt")
+    waypoints = apt2path(waypoint_file_path, shift, scale);
 
   RCLCPP_INFO(LOGGER, "loaded %li waypoints",waypoints.size());
 
